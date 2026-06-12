@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代理出口测试工具</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;--t2:#94a3b8;--accent:#3b82f6;--hover:#2563eb;--r:12px}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:20px}
+  .c{width:100%;max-width:1000px;padding-top:20px}
+  .h{text-align:center;margin-bottom:18px}.h h1{font-size:20px;font-weight:700}.h p{color:var(--t2);margin-top:2px;font-size:11px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
+  .ct{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--t2);margin-bottom:10px}
+
+  .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:5px;margin-bottom:6px}
+  .sc{background:var(--bg);border-radius:var(--r);padding:9px 10px;border:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:10px}
+  .sc .d{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+  .sc .ip{font-family:'SF Mono',monospace;font-size:11px;font-weight:700}
+  .sc .mn{font-size:9px;color:var(--t2)}
+  .sr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;padding:8px 10px;background:var(--bg);border-radius:var(--r);font-size:10px}
+  .sr .tag{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'SF Mono',monospace}
+
+  .ctrl{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+  .af{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+  .af input{flex:1;min-width:140px;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:11px;outline:none}
+  .af input:focus{border-color:var(--accent)}
+
+  .btn{padding:6px 10px;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+  .bp{background:var(--accent);color:#fff}.bp:hover{background:var(--hover)}
+  .bo{background:transparent;color:var(--text);border:1px solid var(--border)}.bo:hover{background:rgba(255,255,255,.05)}
+  .bs{padding:3px 7px;font-size:9px}
+  .bd{background:rgba(239,68,68,.12);color:#f87171}.bd:hover{background:rgba(239,68,68,.22)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .th{display:grid;grid-template-columns:1fr 85px 75px;gap:5px;padding:0 8px 5px;font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .tr{display:grid;grid-template-columns:1fr 85px 75px;gap:5px;align-items:center;padding:9px 8px;background:var(--bg);border-radius:var(--r);border:1px solid transparent;transition:border-color .15s;margin-bottom:4px}
+  .tr:hover{border-color:var(--border)}
+  .tr .nm{min-width:0}.tr .nm .l{font-size:11px;font-weight:600}.tr .nm .u{font-size:9px;color:var(--t2);word-break:break-all;font-family:'SF Mono',monospace}
+  .tr .lc{font-family:'SF Mono',monospace;font-size:13px;font-weight:600;text-align:center}
+  .tr .lc.g{color:#4ade80}.tr .lc.y{color:#fbbf24}.tr .lc.r{color:#f87171}.tr .lc.w{color:var(--t2);font-size:10px;font-weight:400}
+  .tr .ac{display:flex;gap:2px;justify-content:flex-end}
+
+  .sp{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ft{text-align:center;padding:10px 0 28px;color:var(--t2);font-size:9px;line-height:1.6}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--text);border:1px solid var(--border);padding:7px 16px;border-radius:8px;font-size:11px;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:ti .25s ease}
+  @keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+  .es{text-align:center;padding:30px 20px;color:var(--t2);font-size:11px}.es p{margin-bottom:8px}
+  @media(max-width:700px){.th{grid-template-columns:1fr 60px 50px}.tr{grid-template-columns:1fr 60px 50px;gap:3px;padding:7px 5px}}
+</style>
+</head>
+<body>
+<div class="c">
+  <div class="h"><h1>代理出口测试工具</h1><p>多源出口 IP 对比 + 目标站点延迟检测</p></div>
+
+  <div class="card">
+    <div class="ct">出口 IP 对比</div>
+    <div class="sg" id="srcGrid"><span style="color:var(--t2);font-size:11px;padding:6px;">检测中…</span></div>
+    <div class="sr" id="srcSummary" style="display:none;"></div>
+    <div style="margin-top:4px"><button class="btn bo bs" onclick="refreshSources()">重测</button></div>
+  </div>
+
+  <div class="card">
+    <div class="ctrl">
+      <div class="ct" style="margin-bottom:0;flex:1">目标站点延迟</div>
+      <button class="btn bp" onclick="testAll()" id="btnTestAll">全部测试</button>
+      <button class="btn bo bs" onclick="resetDefaults()">恢复默认</button>
+    </div>
+    <div class="af">
+      <input id="newUrl" placeholder="输入 URL，如 https://www.google.com">
+      <input id="newLabel" placeholder="标签（可选）" style="max-width:100px;">
+      <button class="btn bp bs" onclick="addTarget()">添加</button>
+    </div>
+    <div class="th"><span>目标</span><span style="text-align:center">延迟</span><span style="text-align:right">操作</span></div>
+    <div id="targetList"></div>
+    <div style="margin-top:8px"><button class="btn bo bs" onclick="clearAll()">清空</button></div>
+  </div>
+  <div class="ft">目标站点的出口 IP 在纯前端无法直接获取。顶部卡片展示对不同 IP 检测源的出口 IP，可用于观察代理分流情况。</div>
+</div>
+<div id="toastContainer"></div>
+
+<script>
+const IP_SOURCES=[
+  // 北美
+  {id:'ipify',nm:'ipify.org [US]',url:'https://api.ipify.org?format=json',type:'json',p:r=>r.ip},
+  {id:'aws',nm:'AWS [US]',url:'https://checkip.amazonaws.com',type:'text',p:r=>r.trim()},
+  {id:'icanhazip',nm:'icanhazip [US]',url:'https://icanhazip.com',type:'text',p:r=>r.trim()},
+  {id:'cf',nm:'Cloudflare [全球]',url:'https://www.cloudflare.com/cdn-cgi/trace',type:'trace',p:r=>(r.match(/ip=(\S+)/)||[])[1]},
+  // 欧洲
+  {id:'ifconfig',nm:'ifconfig.me [EU]',url:'https://ifconfig.me/ip',type:'text',p:r=>r.trim()},
+  {id:'ident',nm:'ident.me [EU]',url:'https://v4.ident.me',type:'text',p:r=>r.trim()},
+  // 亚洲
+  {id:'ipip',nm:'myip.ipip.net [中国]',url:'https://myip.ipip.net',type:'text',p:r=>(r.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/)||[])[0]},
+  {id:'ipsb',nm:'api.ip.sb [亚洲]',url:'https://api.ip.sb/ip',type:'text',p:r=>r.trim()},
+];
+const PAL=['#60a5fa','#f472b6','#a78bfa','#34d399','#fbbf24','#fb923c','#f87171','#38bdf8'];
+let srcResults=[],targets=[];
+
+const DEFAULTS=[
+  {url:'https://www.google.com',label:'Google'},
+  {url:'https://www.youtube.com',label:'YouTube'},
+  {url:'https://www.github.com',label:'GitHub'},
+  {url:'https://www.baidu.com',label:'百度'},
+  {url:'https://cloud.tencent.com',label:'腾讯云'},
+  {url:'https://www.cloudflare.com',label:'Cloudflare'},
+];
+
+function init(){
+  try{targets=JSON.parse(localStorage.getItem('ptt-v8'))||DEFAULTS.map(t=>({...t,latency:null}))}
+  catch{targets=DEFAULTS.map(t=>({...t,latency:null}))}
+  renderT();refreshSources();
+}
+function sv(){localStorage.setItem('ptt-v8',JSON.stringify(targets))}
+function resetDefaults(){targets=DEFAULTS.map(t=>({...t,latency:null}));sv();renderT();toast('已恢复')}
+function clearAll(){targets=[];sv();renderT();toast('已清空')}
+function addTarget(){
+  let u=document.getElementById('newUrl').value.trim(),l=document.getElementById('newLabel').value.trim();
+  if(!u)return toast('输入 URL');
+  if(!/^https?:\/\//i.test(u))u='https://'+u;
+  try{new URL(u)}catch{return toast('无效 URL')}
+  if(!l)l=u.replace(/^https?:\/\//,'').split('/')[0];
+  targets.push({url:u,label:l,latency:null});sv();renderT();
+  document.getElementById('newUrl').value='';document.getElementById('newLabel').value='';
+  document.getElementById('newUrl').focus();toast('已添加：'+l)
+}
+document.getElementById('newUrl').addEventListener('keydown',e=>{if(e.key==='Enter')addTarget()});
+function rm(i){targets.splice(i,1);sv();renderT()}
+
+function renderT(){
+  const l=document.getElementById('targetList');
+  if(!targets.length){l.innerHTML='<div class="es"><p>暂无目标</p><button class="btn bo bs" onclick="resetDefaults()">恢复默认</button></div>';return}
+  l.innerHTML=targets.map((t,i)=>{
+    let lh,lc='lc';
+    if(t.latency===null){lh='--';lc+=' w'}else if(t.latency===-1){lh='超时';lc+=' r'}else{lh=t.latency+'ms';lc+=t.latency<200?' g':t.latency<800?' y':' r'}
+    return`<div class="tr" id="t-${i}"><div class="nm"><div class="l">${esc(t.label)}</div><div class="u">${esc(t.url)}</div></div><div class="${lc}" id="la-${i}">${lh}</div><div class="ac"><button class="btn bo bs" onclick="testOne(${i})">测</button><button class="btn bd bs" onclick="rm(${i})">✕</button></div></div>`
+  }).join('')
+}
+function uc(i){
+  const t=targets[i],le=document.getElementById('la-'+i);
+  if(le){if(t.latency===null){le.textContent='--';le.className='lc w'}else if(t.latency===-1){le.textContent='超时';le.className='lc r'}else{le.textContent=t.latency+'ms';le.className='lc'+(t.latency<200?' g':t.latency<800?' y':' r')}}
+  sv()
+}
+
+async function refreshSources(){
+  document.getElementById('srcGrid').innerHTML=IP_SOURCES.map(s=>`<div class="sc" id="sc-${s.id}"><div class="d" style="background:var(--border)">—</div><div style="flex:1;min-width:0"><div style="font-size:9px;color:var(--t2)">${s.nm}</div><div style="color:var(--t2);font-size:10px">请求中…</div></div></div>`).join('');
+  const r=await Promise.allSettled(IP_SOURCES.map(s=>fetchIP(s)));
+  srcResults=r.map((r,i)=>{const s=IP_SOURCES[i];return r.status==='fulfilled'&&r.value?{id:s.id,nm:s.nm,ip:r.value.ip,latency:r.value.latency}:{id:s.id,nm:s.nm,ip:null,latency:null}});
+  renderSrc()
+}
+
+async function fetchIP(s){
+  const st=performance.now();
+  try{
+    const resp=await fetch(s.url,{signal:AbortSignal.timeout(5000)});
+    if(!resp.ok)return null;
+    const data=s.type==='json'?await resp.json():await resp.text();
+    let ip=s.p(data);
+    const m=ip&&ip.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+    if(m)return{ip:m[1],latency:Math.round(performance.now()-st)};
+    return null
+  }catch{return null}
+}
+
+function renderSrc(){
+  const g=document.getElementById('srcGrid'),su=document.getElementById('srcSummary');
+  const v=srcResults.filter(s=>s.ip),uips=[...new Set(v.map(s=>s.ip))],cm={};
+  uips.forEach((ip,i)=>{cm[ip]=PAL[i%PAL.length]});
+  if(!v.length){g.innerHTML='<span style="color:#f87171;font-size:11px;padding:6px">所有源请求失败</span>';su.style.display='none';return}
+  g.innerHTML=srcResults.map(s=>{const ok=!!s.ip,c=ok?cm[s.ip]:'var(--border)';return`<div class="sc"><div class="d" style="background:${c}15;color:${ok?c:'var(--t2)'};border:1.5px solid ${c}40">${ok?'●':'✕'}</div><div style="flex:1;min-width:0"><div style="font-size:9px;color:var(--t2)">${s.nm}<span style="color:${ok?c:'var(--t2)'};font-weight:600;margin-left:3px">${s.latency!=null?s.latency+'ms':''}</span></div><div class="ip" style="color:${ok?c:'var(--t2)'}">${ok?s.ip:'失败'}</div></div></div>`}).join('');
+  su.style.display='flex';
+  if(uips.length===1)su.innerHTML=`<span style="color:var(--t2)">统一出口</span><span class="tag" style="background:${cm[uips[0]]}15;color:${cm[uips[0]]}">${esc(uips[0])}</span><span style="color:#4ade80;font-size:10px">所有源一致</span>`;
+  else su.innerHTML=`<span style="color:var(--t2);margin-right:2px">分流 ${uips.length} 个 IP：</span>${uips.map(ip=>`<span class="tag" style="background:${cm[ip]}15;color:${cm[ip]}">${esc(ip)}</span>`).join(' ')}<span style="font-size:9px;color:var(--t2);margin-left:3px">←${uips.map((ip,i)=>v.filter(s=>s.ip===ip).map(s=>s.nm).join(',')).join(' | ')}</span>`
+}
+
+async function testOne(i){
+  const le=document.getElementById('la-'+i);
+  if(le){le.innerHTML='<span class="sp"></span>';le.className='lc'}
+  targets[i].latency=await testLatency(targets[i].url);
+  uc(i)
+}
+
+async function testLatency(url){
+  try{const s=performance.now();await fetch(url,{method:'HEAD',mode:'no-cors',signal:AbortSignal.timeout(8000),cache:'no-cache'});return Math.round(performance.now()-s)}catch{}
+  try{const s=performance.now();await fetch(url,{method:'GET',mode:'no-cors',signal:AbortSignal.timeout(8000),cache:'no-cache'});return Math.round(performance.now()-s)}catch{}
+  return -1
+}
+
+async function testAll(){
+  const b=document.getElementById('btnTestAll');b.disabled=true;b.innerHTML='<span class="sp"></span> 测试中...';
+  await refreshSources();toast(`测试 ${targets.length} 个目标...`);
+  for(let i=0;i<targets.length;i++){const le=document.getElementById('la-'+i);if(le){le.innerHTML='<span class="sp"></span>';le.className='lc'}}
+  for(let i=0;i<targets.length;i++)await testOne(i);
+  b.disabled=false;b.innerHTML='全部测试';toast('完成')
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toast(m){const c=document.getElementById('toastContainer'),t=document.createElement('div');t.className='toast';t.textContent=m;c.appendChild(t);setTimeout(()=>t.remove(),2000)}
+init();
+</script>
+</body>
+</html>
